@@ -1,0 +1,22 @@
+# serverless.yml
+service: test-authorizers
+
+frameworkVersion: "2"
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  apiGateway:
+    restApiId: ik72ovlyag
+    restApiRootResourceId: 4o1jzka00k
+
+functions:
+  index:
+    handler: handler.hello
+    events:
+      - http:
+          method: GET
+          path: /hello
+          authorizer:
+            type: CUSTOM
+            authorizerId: !ImportValue SessionAuthorizerFunc

@@ -1,0 +1,63 @@
+# serverless.yml
+service: test-api
+frameworkVersion: "2"
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+
+functions:
+  authorizerFunc:
+    handler: handler.auth
+
+  anotherAuth:
+    handler: handler.anotherAuth
+
+resources:
+  Resources:
+    MyRestApi:
+      Type: "AWS::ApiGateway::RestApi"
+      Properties:
+        Description: A test API
+        Name: MyRestAPI
+    Authorizer:
+      Type: "AWS::ApiGateway::Authorizer"
+      Properties:
+        AuthorizerResultTtlInSeconds: "300"
+        AuthorizerUri: !Join
+          - ""
+          - - "arn:aws:apigateway:"
+            - !Ref "AWS::Region"
+            - ":lambda:path/2015-03-31/functions/"
+            - !GetAtt
+              - AuthorizerFuncLambdaFunction
+              - Arn
+            - /invocations
+        Type: TOKEN
+        IdentitySource: method.request.header.Auth
+        Name: MyAuthorizer
+        RestApiId: !Ref MyRestApi
+    AnotherAuthorizer:
+      Type: "AWS::ApiGateway::Authorizer"
+      Properties:
+        AuthorizerResultTtlInSeconds: "300"
+        AuthorizerUri: !Join
+          - ""
+          - - "arn:aws:apigateway:"
+            - !Ref "AWS::Region"
+            - ":lambda:path/2015-03-31/functions/"
+            - !GetAtt
+              - AnotherAuthLambdaFunction
+              - Arn
+            - /invocations
+        Type: TOKEN
+        IdentitySource: method.request.header.Auth
+        Name: MyAuthorizerTwo
+        RestApiId: !Ref MyRestApi
+
+  Outputs:
+    SessionAuthorizerFunc:
+      Description: The session authorizer id
+      Value: !Ref Authorizer
+      Export:
+        Name: SessionAuthorizerFunc
